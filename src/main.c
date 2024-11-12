@@ -228,6 +228,8 @@ void processInput() {
 }
 
 int main() {
+    exibirTelaInicial();
+    exibirInstrucoes();
     srand(time(NULL));
     screenInit(1);
     keyboardInit();
