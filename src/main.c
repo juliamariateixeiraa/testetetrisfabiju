@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define LARGURA 10
-#define ALTURA 20
-#define TAMANHO_BLOCO 2
+#define WIDTH 10
+#define HEIGHT 20
+#define BLOCK_SIZE 2
 
 // Definição das formas das peças com rotações possíveis
 char tetrominos[7][4][4][4] = {
@@ -55,151 +55,151 @@ char tetrominos[7][4][4][4] = {
 };
 
 // Estado do tabuleiro
-int tabuleiro[LARGURA][ALTURA];
+int board[WIDTH][HEIGHT];
 
 // Estrutura para representar uma peça
 typedef struct {
     int x, y;
-    int tipo;
-    int rotacao;
-} Peca;
+    int type;
+    int rotation;
+} Piece;
 
-Peca pecaAtual;
+Piece currentPiece;
 
-void desenhaTabuleiro() {
-    telaLimpar();
-    telaDefinirCor(CIANO, PRETO);
-    for (int i = 0; i < LARGURA; i++) {
-        for (int j = 0; j < ALTURA; j++) {
-            if (tabuleiro[i][j]) {
-                telaMoverCursor(TELAINICIOX + i * TAMANHO_BLOCO, TELAINICIOY + j);
+void drawBoard() {
+    screenClear();
+    screenSetColor(CYAN, BLACK);
+    for (int i = 0; i < WIDTH; i++) {
+        for (int j = 0; j < HEIGHT; j++) {
+            if (board[i][j]) {
+                screenGotoxy(SCRSTARTX + i * BLOCK_SIZE, SCRSTARTY + j);
                 printf("[]");
             }
         }
     }
 }
 
-void desenhaPeca(Peca *p) {
-    telaDefinirCor(VERMELHO, PRETO);
+void drawPiece(Piece *p) {
+    screenSetColor(RED, BLACK);
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            if (tetrominos[p->tipo][p->rotacao][i][j]) {
-                telaMoverCursor(TELAINICIOX + (p->x + i) * TAMANHO_BLOCO, TELAINICIOY + p->y + j);
+            if (tetrominos[p->type][p->rotation][i][j]) {
+                screenGotoxy(SCRSTARTX + (p->x + i) * BLOCK_SIZE, SCRSTARTY + p->y + j);
                 printf("[]");
             }
         }
     }
 }
 
-int verificaColisao(Peca *p) {
+int checkCollision(Piece *p) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            if (tetrominos[p->tipo][p->rotacao][i][j]) {
+            if (tetrominos[p->type][p->rotation][i][j]) {
                 int x = p->x + i;
                 int y = p->y + j;
-                if (x < 0 || x >= LARGURA || y >= ALTURA || tabuleiro[x][y]) return 1;
+                if (x < 0 || x >= WIDTH || y >= HEIGHT || board[x][y]) return 1;
             }
         }
     }
     return 0;
 }
 
-void posicionaPeca(Peca *p) {
+void placePiece(Piece *p) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            if (tetrominos[p->tipo][p->rotacao][i][j]) {
-                tabuleiro[p->x + i][p->y + j] = 1;
+            if (tetrominos[p->type][p->rotation][i][j]) {
+                board[p->x + i][p->y + j] = 1;
             }
         }
     }
 }
 
-void removeLinhasCompletas() {
-    for (int j = 0; j < ALTURA; j++) {
-        int completa = 1;
-        for (int i = 0; i < LARGURA; i++) {
-            if (!tabuleiro[i][j]) {
-                completa = 0;
+void removeFullLines() {
+    for (int j = 0; j < HEIGHT; j++) {
+        int full = 1;
+        for (int i = 0; i < WIDTH; i++) {
+            if (!board[i][j]) {
+                full = 0;
                 break;
             }
         }
-        if (completa) {
+        if (full) {
             for (int k = j; k > 0; k--) {
-                for (int i = 0; i < LARGURA; i++) {
-                    tabuleiro[i][k] = tabuleiro[i][k - 1];
+                for (int i = 0; i < WIDTH; i++) {
+                    board[i][k] = board[i][k - 1];
                 }
             }
-            for (int i = 0; i < LARGURA; i++) {
-                tabuleiro[i][0] = 0;
+            for (int i = 0; i < WIDTH; i++) {
+                board[i][0] = 0;
             }
         }
     }
 }
 
-void geraPeca() {
-    pecaAtual.x = LARGURA / 2 - 2;
-    pecaAtual.y = 0;
-    pecaAtual.tipo = rand() % 7;
-    pecaAtual.rotacao = 0;
-    if (verificaColisao(&pecaAtual)) {
-        telaDestruir();
+void spawnPiece() {
+    currentPiece.x = WIDTH / 2 - 2;
+    currentPiece.y = 0;
+    currentPiece.type = rand() % 7;
+    currentPiece.rotation = 0;
+    if (checkCollision(&currentPiece)) {
+        screenDestroy();
         printf("Game Over\n");
         exit(0);
     }
 }
 
-void rotacionaPeca() {
-    int rotacaoAntiga = pecaAtual.rotacao;
-    pecaAtual.rotacao = (pecaAtual.rotacao + 1) % 4;
-    if (verificaColisao(&pecaAtual)) pecaAtual.rotacao = rotacaoAntiga;
+void rotatePiece() {
+    int oldRotation = currentPiece.rotation;
+    currentPiece.rotation = (currentPiece.rotation + 1) % 4;
+    if (checkCollision(&currentPiece)) currentPiece.rotation = oldRotation;
 }
 
-void movePeca(int dx) {
-    pecaAtual.x += dx;
-    if (verificaColisao(&pecaAtual)) pecaAtual.x -= dx;
+void movePiece(int dx) {
+    currentPiece.x += dx;
+    if (checkCollision(&currentPiece)) currentPiece.x -= dx;
 }
 
-void descePeca() {
-    pecaAtual.y++;
-    if (verificaColisao(&pecaAtual)) {
-        pecaAtual.y--;
-        posicionaPeca(&pecaAtual);
-        removeLinhasCompletas();
-        geraPeca();
+void dropPiece() {
+    currentPiece.y++;
+    if (checkCollision(&currentPiece)) {
+        currentPiece.y--;
+        placePiece(&currentPiece);
+        removeFullLines();
+        spawnPiece();
     }
 }
 
-void processaEntrada() {
-    if (teclaPressionada()) {
-        int tecla = lerTecla();
-        switch (tecla) {
-            case 'a': movePeca(-1); break;
-            case 'd': movePeca(1); break;
-            case 's': descePeca(); break;
-            case 'w': rotacionaPeca(); break;
+void processInput() {
+    if (keyhit()) {
+        int key = readch();
+        switch (key) {
+            case 'a': movePiece(-1); break;
+            case 'd': movePiece(1); break;
+            case 's': dropPiece(); break;
+            case 'w': rotatePiece(); break;
         }
     }
 }
 
 int main() {
     srand(time(NULL));
-    telaIniciar(1);
-    tecladoIniciar();
-    temporizadorIniciar(500);
+    screenInit(1);
+    keyboardInit();
+    timerInit(500);
 
-    geraPeca();
+    spawnPiece();
 
     while (1) {
-        processaEntrada();
-        if (temporizadorTempoEsgotado()) {
-            descePeca();
+        processInput();
+        if (timerTimeOver()) {
+            dropPiece();
         }
-        desenhaTabuleiro();
-        desenhaPeca(&pecaAtual);
-        telaAtualizar();
+        drawBoard();
+        drawPiece(&currentPiece);
+        screenUpdate();
     }
 
-    telaDestruir();
-    tecladoDestruir();
+    screenDestroy();
+    keyboardDestroy();
     return 0;
 }
