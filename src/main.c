@@ -3,6 +3,7 @@
 #include "keyboard.h"
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 #define WIDTH 10
 #define HEIGHT 20
@@ -54,6 +55,13 @@ char tetrominos[7][4][4][4] = {
     }
 };
 
+// Variáveis de estado do jogo
+int board[WIDTH][HEIGHT];
+int score = 0;               // Pontuação do jogo
+int totalLinesCleared = 0;    // Total de linhas completas
+int level = 1;                // Nível inicial do jogo
+int dropSpeed = 500;          // Velocidade inicial de descida das peças (em milissegundos)
+
 
 void exibirTelaInicial() {
     system("clear"); // Limpa o terminal (ajuste para "cls" se estiver no Windows)
@@ -100,10 +108,6 @@ void exibirInstrucoes() {
     printf("############################################################\n");
     getchar(); // Espera o usuário pressionar ENTER para continuar
 }
-// Estado do tabuleiro
-int board[WIDTH][HEIGHT];
-
-// Estrutura para representar uma peça
 typedef struct {
     int x, y;
     int type;
@@ -111,6 +115,12 @@ typedef struct {
 } Piece;
 
 Piece currentPiece;
+
+void updateDropSpeed() {
+    dropSpeed = 500 - (level - 1) * 50;
+    if (dropSpeed < 100) dropSpeed = 100; // Limite mínimo de velocidade
+    timerSet(dropSpeed);  // Atualiza o temporizador
+}
 
 void drawBoard() {
     screenClear();
@@ -143,7 +153,9 @@ int checkCollision(Piece *p) {
             if (tetrominos[p->type][p->rotation][i][j]) {
                 int x = p->x + i;
                 int y = p->y + j;
-                if (x < 0 || x >= WIDTH || y >= HEIGHT || board[x][y]) return 1;
+                if (x < 0 || x >= WIDTH || y >= HEIGHT || (y >= 0 && board[x][y])) {
+                    return 1;
+                }
             }
         }
     }
@@ -154,9 +166,47 @@ void placePiece(Piece *p) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             if (tetrominos[p->type][p->rotation][i][j]) {
-                board[p->x + i][p->y + j] = 1;
+                int x = p->x + i;
+                int y = p->y + j;
+                if (y >= 0 && x >= 0 && x < WIDTH) {
+                    board[x][y] = 1;
+                }
             }
         }
+    }
+}
+
+void spawnPiece() {
+    currentPiece.x = WIDTH / 2 - 2;
+    currentPiece.y = 0;
+    currentPiece.type = rand() % 7;
+    currentPiece.rotation = 0;
+}
+
+void rotatePiece(Piece *p) {
+    int originalRotation = p->rotation;
+    p->rotation = (p->rotation + 1) % 4;
+    if (checkCollision(p)) {
+        p->rotation = originalRotation;
+    }
+}
+
+void movePiece(int dx, int dy) {
+    currentPiece.x += dx;
+    currentPiece.y += dy;
+    if (checkCollision(&currentPiece)) {
+        currentPiece.x -= dx;
+        currentPiece.y -= dy;
+    }
+}
+
+void dropPiece() {
+    currentPiece.y++;
+    if (checkCollision(&currentPiece)) {
+        currentPiece.y--;
+        placePiece(&currentPiece);
+        removeFullLines();
+        spawnPiece();
     }
 }
 
@@ -170,6 +220,9 @@ void removeFullLines() {
             }
         }
         if (full) {
+            score += 10;
+            totalLinesCleared++;
+
             for (int k = j; k > 0; k--) {
                 for (int i = 0; i < WIDTH; i++) {
                     board[i][k] = board[i][k - 1];
@@ -178,52 +231,23 @@ void removeFullLines() {
             for (int i = 0; i < WIDTH; i++) {
                 board[i][0] = 0;
             }
+
+            if (score % 10 == 0) {
+                level++;
+                printf("Parabéns! Você chegou ao nível %d!\n", level);
+                updateDropSpeed();
+            }
         }
-    }
-}
-
-void spawnPiece() {
-    currentPiece.x = WIDTH / 2 - 2;
-    currentPiece.y = 0;
-    currentPiece.type = rand() % 7;
-    currentPiece.rotation = 0;
-    if (checkCollision(&currentPiece)) {
-        screenDestroy();
-        printf("Game Over\n");
-        exit(0);
-    }
-}
-
-void rotatePiece() {
-    int oldRotation = currentPiece.rotation;
-    currentPiece.rotation = (currentPiece.rotation + 1) % 4;
-    if (checkCollision(&currentPiece)) currentPiece.rotation = oldRotation;
-}
-
-void movePiece(int dx) {
-    currentPiece.x += dx;
-    if (checkCollision(&currentPiece)) currentPiece.x -= dx;
-}
-
-void dropPiece() {
-    currentPiece.y++;
-    if (checkCollision(&currentPiece)) {
-        currentPiece.y--;
-        placePiece(&currentPiece);
-        removeFullLines();
-        spawnPiece();
     }
 }
 
 void processInput() {
-    if (keyhit()) {
-        int key = readch();
-        switch (key) {
-            case 'a': movePiece(-1); break;
-            case 'd': movePiece(1); break;
-            case 's': dropPiece(); break;
-            case 'w': rotatePiece(); break;
-        }
+    int key = keyboardRead();
+    switch (key) {
+        case 'a': movePiece(-1, 0); break;
+        case 'd': movePiece(1, 0); break;
+        case 's': dropPiece(); break;
+        case 'w': rotatePiece(&currentPiece); break;
     }
 }
 
@@ -233,7 +257,7 @@ int main() {
     srand(time(NULL));
     screenInit(1);
     keyboardInit();
-    timerInit(500);
+    timerInit(dropSpeed);
 
     spawnPiece();
 
