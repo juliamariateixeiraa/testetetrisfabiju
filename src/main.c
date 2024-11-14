@@ -214,27 +214,22 @@ void drawPiece(Piece *piece) {
 
 
 void drawBoard() {
-    screenClear();  // Limpa a tela
-    screenSetColor(CYAN, BLACK);  // Define a cor para o tabuleiro
-
-    // Desenha o tabuleiro dentro da borda
+    screenClear();
+    screenSetColor(CYAN, BLACK);
     for (int i = 0; i < WIDTH; i++) {
         for (int j = 0; j < HEIGHT; j++) {
             if (board[i][j]) {
-                // Ajusta a posição das peças dentro da área do tabuleiro
-                screenGotoxy(SCRSTARTX + (i + 1) * BLOCK_SIZE, SCRSTARTY + (j + 1));  // Ajusta o X e Y
+                screenGotoxy(SCRSTARTX + i * BLOCK_SIZE, SCRSTARTY + j);
                 printf("[]");
             }
         }
     }
-    
-    // Exibe o nível e a pontuação dentro da área do tabuleiro
-    screenGotoxy(SCRSTARTX + WIDTH * BLOCK_SIZE + 2, SCRSTARTY + 1);
+    // Exibe o nível e a pontuação
+    screenGotoxy(SCRSTARTX + WIDTH * BLOCK_SIZE + 2, SCRSTARTY);
     printf("Nível: %d", level);
-    screenGotoxy(SCRSTARTX + WIDTH * BLOCK_SIZE + 2, SCRSTARTY + 2);
+    screenGotoxy(SCRSTARTX + WIDTH * BLOCK_SIZE + 2, SCRSTARTY + 1);
     printf("Pontuação: %d", score);
 }
-
 
 void removeFullLines() {
     // Função que remove linhas completas
