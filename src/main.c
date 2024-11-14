@@ -83,17 +83,17 @@ void exibirTelaInicial() {
 
     // Exibe o título ASCII centralizado
     screenGotoxy(start_x, 5);  // Posição de início para o título (ajuste a linha se necessário)
-    printf("████████╗███████╗████████╗██████╗░██╗░███████╗\n");
+    printf("██████╗░██╗░░░░░░█████╗░░█████╗░██╗░░██╗██╗░░░██╗\n");
     screenGotoxy(start_x, 6);
-    printf("╚══██╔══╝██╔════╝╚══██╔══╝██╔══██╗██║██╔════╝\n");
+    printf("██╔══██╗██║░░░░░██╔══██╗██╔══██╗██║░██╔╝╚██╗░██╔╝\n");
     screenGotoxy(start_x, 7);
-    printf("░░░██║░░░█████╗░░░░░██║░░░██████╔╝██║╚█████╗░\n");
+    printf("██████╦╝██║░░░░░██║░░██║██║░░╚═╝█████═╝░░╚████╔╝░\n");
     screenGotoxy(start_x, 8);
-    printf("░░░██║░░░██╔══╝░░░░░██║░░░██╔══██╗██║░╚═══██╗\n");
+    printf("██╔══██╗██║░░░░░██║░░██║██║░░██╗██╔═██╗░░░╚██╔╝░░\n");
     screenGotoxy(start_x, 9);
-    printf("░░░██║░░░███████╗░░░██║░░░██║░░██║░░██║██║██║\n");
+    printf("██████╦╝███████╗╚█████╔╝╚█████╔╝██║░╚██╗░░░██║░░░\n");
     screenGotoxy(start_x, 10);
-    printf("░░░╚═╝░░░╚══════╝░░░╚═╝░░░╚═╝░░╚═╝╚═ ════╝░\n");
+    printf("╚═════╝░╚══════╝░╚════╝░░╚════╝░╚═╝░░╚═╝░░░╚═╝░░░\n");
 
     // Exibe a mensagem de preparação centralizada
     screenGotoxy((MAXX - 42) / 2, 12);
@@ -104,7 +104,6 @@ void exibirTelaInicial() {
     // Aguarde o usuário iniciar
     getchar();
 }
-
 
 
 void exibirInstrucoes() {
